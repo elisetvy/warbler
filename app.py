@@ -6,10 +6,13 @@ from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import Unauthorized
 
-from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
+from flask_bcrypt import Bcrypt
+
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, EditProfileForm
 from models import db, connect_db, User, Message
 
 load_dotenv()
+bcrypt = Bcrypt()
 
 CURR_USER_KEY = "curr_user"
 
@@ -211,8 +214,6 @@ def start_following(follow_id):
     Redirect to following page for the current user.
     """
 
-    form = g.csrf_form
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -245,12 +246,40 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
-    # fix
-    # form = g.csrf_form
 
-    # if form.validate_on_submit():
+    if not g.user:
+        raise Unauthorized()
 
-    # raise Unauthorized()
+    form = EditProfileForm()
+
+    if form.validate_on_submit():
+        username = form.username.data
+        email = form.email.data
+        image_url = form.image_url.data
+        header_image_url = form.header_image_url.data
+        bio = form.bio.data
+        password = form.password.data
+
+        is_valid = True
+
+        if User.query.filter(User.username == username).first():
+            form.username.errors = ["Username already exists!"]
+            is_valid = False
+
+        if User.query.filter(User.email == email).first():
+            form.email.errors = ["Email is already associated with a user!"]
+            is_valid = False
+
+        if g.user.password == bcrypt.generate_password_hash(password).decode('UTF-8'):
+            form.password.errors = ["Wrong password"]
+            is_valid = False
+
+        if is_valid is True:
+            db.session.commit()
+            return redirect(f'/users/{g.user.id}')
+
+    return render_template('/users/edit.html',
+                           form=form)
 
     # IMPLEMENT THIS
 
