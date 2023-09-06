@@ -378,8 +378,11 @@ def homepage():
     """
     form = g.csrf_form
     if g.user:
+        following = [ following.id for following in g.user.following ]
+
         messages = (Message
                     .query
+                    .filter((Message.user_id == g.user.id) | (Message.user_id.in_(following)))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
@@ -397,3 +400,13 @@ def add_header(response):
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
     response.cache_control.no_store = True
     return response
+
+
+# SELECT * FROM MESSAGES
+# WHERE message user id == OUR ID OR message user id IN ()
+# ORDER
+# LIMIT
+
+# list =
+# for following in user.following
+# list.addpend following.userid
