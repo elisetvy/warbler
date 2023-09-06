@@ -250,7 +250,7 @@ def profile():
     if not g.user:
         raise Unauthorized()
 
-    form = EditProfileForm()
+    form = EditProfileForm(obj=g.user)
 
     if form.validate_on_submit():
         username = form.username.data
@@ -270,16 +270,21 @@ def profile():
             form.email.errors = ["Email is already associated with a user!"]
             is_valid = False
 
-        if g.user.password == bcrypt.generate_password_hash(password).decode('UTF-8'):
+        if bcrypt.check_password_hash(g.user.password, password) is False:
             form.password.errors = ["Wrong password"]
             is_valid = False
 
         if is_valid is True:
+            g.user.username = username or g.user.username
+            g.user.email = email or g.user.email
+            g.user.image_url = image_url or g.user.image_url
+            g.user.header_image_url = header_image_url or g.user.header_image_url
+            g.user.bio = bio or g.user.bio
             db.session.commit()
             return redirect(f'/users/{g.user.id}')
 
     return render_template('/users/edit.html',
-                           form=form)
+                           form=form, user=g.user)
 
     # IMPLEMENT THIS
 
