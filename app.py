@@ -17,7 +17,7 @@ app = Flask(__name__)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ['DATABASE_URL']
 app.config['SQLALCHEMY_ECHO'] = False
-app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = True
+app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 app.config['SECRET_KEY'] = os.environ['SECRET_KEY']
 toolbar = DebugToolbarExtension(app)
 
@@ -38,15 +38,18 @@ def add_user_to_g():
     else:
         g.user = None
 
+
 @app.before_request
 def do_csrf():
     """Implement CSRF."""
     g.csrf_form = CSRFProtectForm()
 
+
 def do_login(user):
     """Log in user."""
 
     session[CURR_USER_KEY] = user.id
+
 
 def do_logout():
     """Log out user."""
@@ -160,25 +163,34 @@ def list_users():
 def show_user(user_id):
     """Show user profile."""
 
+    form = g.csrf_form
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
 
-    return render_template('users/show.html', user=user)
+    return render_template('users/show.html',
+                           user=user,
+                           form=form)
 
 
 @app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
 
+    form = g.csrf_form
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/following.html', user=user)
+    return render_template('users/following.html',
+                           user=user,
+                           form=form)
+
 
 @app.get('/users/<int:user_id>/followers')
 def show_followers(user_id):
@@ -196,8 +208,10 @@ def show_followers(user_id):
 def start_following(follow_id):
     """Add a follow for the currently-logged-in user.
 
-    Redirect to following page for the current for the current user.
+    Redirect to following page for the current user.
     """
+
+    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -231,6 +245,12 @@ def stop_following(follow_id):
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
     """Update profile for current user."""
+    # fix
+    # form = g.csrf_form
+
+    # if form.validate_on_submit():
+
+    # raise Unauthorized()
 
     # IMPLEMENT THIS
 
@@ -322,7 +342,7 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of self & followed_users
     """
-    form = CSRFProtectForm()
+    form = g.csrf_form
     if g.user:
         messages = (Message
                     .query
