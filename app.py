@@ -223,14 +223,14 @@ def start_following(follow_id):
 
     form = g.csrf_form
 
-    if not g.user:
+    if not g.user: #TODO: combine check validation
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
     db.session.commit()
-
+# TODO: validate
     return redirect(f"/users/{g.user.id}/following")
 
 
@@ -355,6 +355,7 @@ def show_message(message_id):
     """Show a message."""
 
     form = g.csrf_form
+    #TODO: update this to make sure token is getting there update TEMPLATE!!!!!!!!!!! FORM HIDDEN FIELD
 
     if not g.user:
         flash("Access unauthorized.", "danger")
