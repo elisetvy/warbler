@@ -90,5 +90,8 @@
   {% block user_details %}
   {% endblock %}
 </div>
+<form method="POST">
+  {{ form.hidden_tag() }}
+</form>
 
 {% endblock %}

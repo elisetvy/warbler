@@ -4,8 +4,9 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, flash, redirect, session, g
 from flask_debugtoolbar import DebugToolbarExtension
 from sqlalchemy.exc import IntegrityError
+from werkzeug.exceptions import Unauthorized
 
-from forms import UserAddForm, LoginForm, MessageForm
+from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm
 from models import db, connect_db, User, Message
 
 load_dotenv()
@@ -37,12 +38,15 @@ def add_user_to_g():
     else:
         g.user = None
 
+@app.before_request
+def do_csrf():
+    """Implement CSRF."""
+    g.csrf_form = CSRFProtectForm()
 
 def do_login(user):
     """Log in user."""
 
     session[CURR_USER_KEY] = user.id
-
 
 def do_logout():
     """Log out user."""
@@ -117,6 +121,13 @@ def logout():
 
     form = g.csrf_form
 
+    if form.validate_on_submit():
+        do_logout()
+        flash("Logged out.")
+        return redirect("/login")
+
+    raise Unauthorized()
+
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
 
@@ -168,7 +179,6 @@ def show_following(user_id):
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html', user=user)
-
 
 @app.get('/users/<int:user_id>/followers')
 def show_followers(user_id):
@@ -312,7 +322,7 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of self & followed_users
     """
-
+    form = CSRFProtectForm()
     if g.user:
         messages = (Message
                     .query
@@ -320,7 +330,7 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages)
+        return render_template('home.html', messages=messages, form=form)
 
     else:
         return render_template('home-anon.html')
