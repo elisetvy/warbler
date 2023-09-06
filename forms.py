@@ -32,6 +32,11 @@ class UserAddForm(FlaskForm):
         validators=[Optional(), URL(), Length(max=255)]
     )
 
+    location = StringField(
+        '(Optional) Image URL',
+        validators=[Optional(), Length(max=50)]
+    )
+
 
 class LoginForm(FlaskForm):
     """Login form."""
@@ -76,6 +81,11 @@ class EditProfileForm(FlaskForm):
 
     bio = TextAreaField('Bio',
                         validators=[Optional()])
+
+    location = StringField(
+        'Location',
+        validators=[Optional(), Length(max=50)]
+    )
 
     password = PasswordField(
         'Password',
