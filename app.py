@@ -127,16 +127,15 @@ def logout():
 
     form = g.csrf_form
 
-    if not g.user:
+    if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    if form.validate_on_submit():
-        do_logout()
-        flash("Logged out.")
-        return redirect("/login")
-
-    raise Unauthorized()
+    # guarding
+    # if form.validate_on_submit():
+    do_logout()
+    flash("Logged out.")
+    return redirect("/login")
 
     # IMPLEMENT THIS AND FIX BUG
     # DO NOT CHANGE METHOD ON ROUTE
@@ -151,6 +150,7 @@ def list_users():
 
     Can take a 'q' param in querystring to search by that username.
     """
+
     form = g.csrf_form
 
     if not g.user:
@@ -164,7 +164,9 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users, form=form)
+    return render_template('users/index.html',
+                           users=users,
+                           form=form)
 
 
 @app.get('/users/<int:user_id>')
@@ -211,7 +213,9 @@ def show_followers(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user, form=form)
+    return render_template('users/followers.html',
+                           user=user,
+                           form=form)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -223,14 +227,14 @@ def start_following(follow_id):
 
     form = g.csrf_form
 
-    if not g.user: #TODO: combine check validation
+    if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     followed_user = User.query.get_or_404(follow_id)
     g.user.following.append(followed_user)
     db.session.commit()
-# TODO: validate
+
     return redirect(f"/users/{g.user.id}/following")
 
 
@@ -243,7 +247,7 @@ def stop_following(follow_id):
 
     form = g.csrf_form
 
-    if not g.user:
+    if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
@@ -269,6 +273,7 @@ def profile():
         image_url = form.image_url.data
         header_image_url = form.header_image_url.data
         bio = form.bio.data
+        location = form.location.data
         password = form.password.data
 
         is_valid = True
@@ -291,6 +296,7 @@ def profile():
             g.user.image_url = image_url or g.user.image_url
             g.user.header_image_url = header_image_url or g.user.header_image_url
             g.user.bio = bio or g.user.bio
+            g.user.location = location or g.user.location
             db.session.commit()
             return redirect(f'/users/{g.user.id}')
 
@@ -308,7 +314,7 @@ def delete_user():
     """
     form = g.csrf_form
 
-    if not g.user:
+    if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
@@ -347,7 +353,8 @@ def add_message():
 
         return redirect(f"/users/{g.user.id}")
 
-    return render_template('messages/create.html', form=form)
+    return render_template('messages/create.html',
+                           form=form)
 
 
 @app.get('/messages/<int:message_id>')
@@ -355,14 +362,15 @@ def show_message(message_id):
     """Show a message."""
 
     form = g.csrf_form
-    #TODO: update this to make sure token is getting there update TEMPLATE!!!!!!!!!!! FORM HIDDEN FIELD
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    return render_template('messages/show.html', message=msg, form=form)
+    return render_template('messages/show.html',
+                           message=msg,
+                           form=form)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -374,7 +382,7 @@ def delete_message(message_id):
     """
     form = g.csrf_form
 
-    if not g.user:
+    if not g.user or not form.validate_on_submit():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
@@ -399,7 +407,7 @@ def homepage():
     form = g.csrf_form
 
     if g.user:
-        following = [ following.id for following in g.user.following ]
+        following = [following.id for following in g.user.following]
 
         messages = (Message
                     .query
@@ -408,7 +416,9 @@ def homepage():
                     .limit(100)
                     .all())
 
-        return render_template('home.html', messages=messages, form=form)
+        return render_template('home.html',
+                               messages=messages,
+                               form=form)
 
     else:
         return render_template('home-anon.html')
@@ -421,13 +431,3 @@ def add_header(response):
     # https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control
     response.cache_control.no_store = True
     return response
-
-
-# SELECT * FROM MESSAGES
-# WHERE message user id == OUR ID OR message user id IN ()
-# ORDER
-# LIMIT
-
-# list =
-# for following in user.following
-# list.addpend following.userid
