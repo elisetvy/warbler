@@ -127,6 +127,10 @@ def logout():
 
     form = g.csrf_form
 
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
     if form.validate_on_submit():
         do_logout()
         flash("Logged out.")
@@ -147,6 +151,7 @@ def list_users():
 
     Can take a 'q' param in querystring to search by that username.
     """
+    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -159,7 +164,7 @@ def list_users():
     else:
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
-    return render_template('users/index.html', users=users)
+    return render_template('users/index.html', users=users, form=form)
 
 
 @app.get('/users/<int:user_id>')
@@ -199,12 +204,14 @@ def show_following(user_id):
 def show_followers(user_id):
     """Show list of followers of this user."""
 
+    form = g.csrf_form
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('users/followers.html', user=user)
+    return render_template('users/followers.html', user=user, form=form)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -213,6 +220,8 @@ def start_following(follow_id):
 
     Redirect to following page for the current user.
     """
+
+    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -232,6 +241,8 @@ def stop_following(follow_id):
     Redirect to following page for the current for the current user.
     """
 
+    form = g.csrf_form
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -250,7 +261,7 @@ def profile():
     if not g.user:
         raise Unauthorized()
 
-    form = EditProfileForm(obj=g.user)
+    form = EditProfileForm()
 
     if form.validate_on_submit():
         username = form.username.data
@@ -295,12 +306,17 @@ def delete_user():
 
     Redirect to signup page.
     """
+    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     do_logout()
+
+    for message in g.user.messages:
+        db.session.delete(message)
+        db.session.commit()
 
     db.session.delete(g.user)
     db.session.commit()
@@ -338,12 +354,14 @@ def add_message():
 def show_message(message_id):
     """Show a message."""
 
+    form = g.csrf_form
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
-    return render_template('messages/show.html', message=msg)
+    return render_template('messages/show.html', message=msg, form=form)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -353,6 +371,7 @@ def delete_message(message_id):
     Check that this message was written by the current user.
     Redirect to user page on success.
     """
+    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -377,6 +396,7 @@ def homepage():
     - logged in: 100 most recent messages of self & followed_users
     """
     form = g.csrf_form
+
     if g.user:
         following = [ following.id for following in g.user.following ]
 
