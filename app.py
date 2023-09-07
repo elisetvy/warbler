@@ -217,7 +217,8 @@ def show_likes(user_id):
 
     user = User.query.get_or_404(user_id)
     return render_template('/likes/show.html',
-                           user=user, liked_messages=g.user.liked_messages)
+                           user=user,
+                           liked_messages=user.liked_messages)
 
 
 @app.post('/users/likes/<int:message_id>')
