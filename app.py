@@ -237,7 +237,7 @@ def like_message(message_id):
     return redirect(f"/users/{g.user.id}/likes")
 
 
-@app.post('/users/likes/<int:message_id>')
+@app.post('/users/unlikes/<int:message_id>')
 def unlike_message(message_id):
     """Unlike a message"""
 
