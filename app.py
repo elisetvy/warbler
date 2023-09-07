@@ -221,10 +221,8 @@ def show_likes(user_id):
                            user=user,
                            liked_messages=user.liked_messages)
 
-# TODO: add heart when clicking on message
 
-
-@app.post('/users/likes/<int:message_id>')
+@app.post('/messages/<int:message_id>/like')
 def like_message(message_id):
     """Like a message from another user"""
 
@@ -242,13 +240,10 @@ def like_message(message_id):
 
 # imperative approach => toggle; we took declarative approach
 
-# should happen on message resource not users
-# /messages/<int:message_id>/action
-
 # TODO: redirect to last page user was on when we like a msg
 
 
-@app.post('/users/unlikes/<int:message_id>')
+@app.post('/messages/<int:message_id>/unlike')
 def unlike_message(message_id):
     """Unlike a message"""
 

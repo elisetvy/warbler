@@ -57,14 +57,14 @@
             <p>{{ msg.text }}</p>
 
             {% if msg in g.user.liked_messages %}
-            <form method="POST" action="/users/unlikes/{{ msg.id }}">
+            <form method="POST" action="/messages/{{ msg.id}}/unlike">
               {{ g.csrf_form.hidden_tag() }}
               <button style="background:none; border:none; position: relative; z-index: 2;">
                 <i class="bi bi-heart-fill" style="color: #e68fac"></i>
               </button>
             </form>
             {% elif msg not in g.user.messages%}
-            <form method="POST" action="/users/likes/{{ msg.id }}">
+            <form method="POST" action="/messages/{{ msg.id}}/like">
               {{ g.csrf_form.hidden_tag() }}
               <button style="background:none; border:none; position: relative; z-index: 2;">
                 <i class="bi bi-heart" style="color: #e68fac"></i>

@@ -20,14 +20,14 @@
         <p>{{ message.text }}</p>
 
         {% if message in g.user.liked_messages %}
-        <form method="POST" action="/users/unlikes/{{ message.id }}">
+        <form method="POST" action="/messages/{{ message.id}}/unlike">
           {{ g.csrf_form.hidden_tag() }}
           <button style="background:none; border:none; position: relative; z-index: 2;">
             <i class="bi bi-heart-fill" style="color: #e68fac"></i>
           </button>
         </form>
         {% elif message not in g.user.messages%}
-        <form method="POST" action="/users/likes/{{ message.id }}">
+        <form method="POST" action="/messages/{{ message.id}}/like">
           {{ g.csrf_form.hidden_tag() }}
           <button style="background:none; border:none; position: relative; z-index: 2;">
             <i class="bi bi-heart" style="color: #e68fac"></i>
