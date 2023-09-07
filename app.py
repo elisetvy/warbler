@@ -84,7 +84,7 @@ def signup():
                 password=form.password.data,
                 email=form.email.data,
                 image_url=form.image_url.data or User.image_url.default.arg,
-                location=form.location.data
+                location=form.location.data or User.location.default.arg
             )
             db.session.commit()
 
@@ -216,8 +216,8 @@ def show_likes(user_id):
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
-    return render_template('likes/show.html',
-                           user=user)
+    return render_template('/likes/show.html',
+                           user=user, liked_messages=g.user.liked_messages)
 
 
 @app.post('/users/likes/<int:message_id>')
@@ -230,8 +230,8 @@ def like_message(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    liked_message = Like.query.get_or_404(message_id)
-    g.user.likes.append(liked_message)
+    liked_message = Message.query.get_or_404(message_id)
+    g.user.liked_messages.append(liked_message)
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}/likes")
@@ -248,7 +248,7 @@ def unlike_message(message_id):
         return redirect("/")
 
     liked_message = User.query.get_or_404(message_id)
-    g.user.likes.remove(liked_message)
+    g.user.liked_messages.remove(liked_message)
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}/likes")

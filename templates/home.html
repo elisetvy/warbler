@@ -56,10 +56,14 @@
             <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
             <p>{{ msg.text }}</p>
             {% if msg.user.username != g.user.username %}
-            <form action="/users/{{ g.user.id }}" method="POST">
+            <form action="/users/likes/{{ msg.id }}" method="POST">
               {{ g.csrf_form.hidden_tag() }}
               <button style="background:none; border:none; position: relative; z-index: 2;">
-                <i class="bi bi-heart"></i>
+                {% if msg in g.user.liked_messages %}
+                <i class="bi bi-heart-fill" style="color: #e68fac"></i>
+                {% else %}
+                <i class="bi bi-heart" style="color: #e68fac"></i>
+                {% endif %}
               </button>
             </form>
             {% endif %}

@@ -3,20 +3,20 @@
 <div class="col-sm-6">
   <ul class="list-group" id="messages">
 
-    {% for like in user.liked_messages %}
+    {% for like in liked_messages %}
     <li class="list-group-item">
-      <a href="/messages/{{ like.message_id }}" class="message-link"></a>
+      <a href="/messages/{{ like.id }}" class="message-link"></a>
 
-      <a href="/users/{{ user_id }}">
-        <img src="{{ user.image_url }}" alt="user image" class="timeline-image">
+      <a href="/users/{{ like.user.id }}">
+        <img src="{{ like.user.image_url }}" alt="user image" class="timeline-image">
       </a>
 
       <div class="message-area">
-        <a href="/users/{{ like.user_id }}">@{{ like.user.username }}</a>
+        <a href="/users/{{ like.user.id }}">@{{ like.user.username }}</a>
         <span class="text-muted">
-          {{ message.timestamp.strftime('%d %B %Y') }}
+          {{ like.timestamp.strftime('%d %B %Y') }}
         </span>
-        <p>{{ message.text }}</p>
+        <p>{{ like.text }}</p>
       </div>
     </li>
 
