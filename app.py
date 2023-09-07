@@ -132,6 +132,7 @@ def logout():
         return redirect("/")
 
     # guarding
+    #
     # if form.validate_on_submit():
     do_logout()
     flash("Logged out.")
@@ -151,8 +152,6 @@ def list_users():
     Can take a 'q' param in querystring to search by that username.
     """
 
-    form = g.csrf_form
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -165,15 +164,12 @@ def list_users():
         users = User.query.filter(User.username.like(f"%{search}%")).all()
 
     return render_template('users/index.html',
-                           users=users,
-                           form=form)
+                           users=users)
 
 
 @app.get('/users/<int:user_id>')
 def show_user(user_id):
     """Show user profile."""
-
-    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -182,31 +178,24 @@ def show_user(user_id):
     user = User.query.get_or_404(user_id)
 
     return render_template('users/show.html',
-                           user=user,
-                           form=form)
+                           user=user)
 
 
 @app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
-
-    form = g.csrf_form
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     user = User.query.get_or_404(user_id)
     return render_template('users/following.html',
-                           user=user,
-                           form=form)
+                           user=user)
 
 
 @app.get('/users/<int:user_id>/followers')
 def show_followers(user_id):
     """Show list of followers of this user."""
-
-    form = g.csrf_form
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -214,8 +203,7 @@ def show_followers(user_id):
 
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html',
-                           user=user,
-                           form=form)
+                           user=user)
 
 
 @app.post('/users/follow/<int:follow_id>')
@@ -265,43 +253,45 @@ def profile():
     if not g.user:
         raise Unauthorized()
 
-    form = EditProfileForm()
+    form = EditProfileForm(obj=g.user)
 
     if form.validate_on_submit():
-        username = form.username.data
-        email = form.email.data
-        image_url = form.image_url.data
-        header_image_url = form.header_image_url.data
-        bio = form.bio.data
-        location = form.location.data
-        password = form.password.data
+        if User.authenticate(g.user.username, form.password.data):
+            username = form.username.data
+            email = form.email.data
+            image_url = form.image_url.data
+            header_image_url = form.header_image_url.data
+            bio = form.bio.data
+            location = form.location.data
 
-        is_valid = True
+            is_valid = True
 
-        if User.query.filter(User.username == username).first():
-            form.username.errors = ["Username already exists!"]
-            is_valid = False
+            # TODO: further study: add additional validation for if username or email is not changing
 
-        if User.query.filter(User.email == email).first():
-            form.email.errors = ["Email is already associated with a user!"]
-            is_valid = False
+            if User.query.filter(User.username == username).first():
+                form.username.errors = ["Username already exists!"]
+                is_valid = False
 
-        if bcrypt.check_password_hash(g.user.password, password) is False:
-            form.password.errors = ["Wrong password"]
-            is_valid = False
+            if User.query.filter(User.email == email).first():
+                form.email.errors = [
+                    "Email is already associated with a user!"]
+                is_valid = False
 
-        if is_valid is True:
-            g.user.username = username or g.user.username
-            g.user.email = email or g.user.email
-            g.user.image_url = image_url or g.user.image_url
-            g.user.header_image_url = header_image_url or g.user.header_image_url
-            g.user.bio = bio or g.user.bio
-            g.user.location = location or g.user.location
-            db.session.commit()
-            return redirect(f'/users/{g.user.id}')
+            if is_valid:
+                g.user.username = username or g.user.username
+                g.user.email = email or g.user.email
+                g.user.image_url = image_url or g.user.image_url
+                g.user.header_image_url = header_image_url or g.user.header_image_url
+                g.user.bio = bio or g.user.bio
+                g.user.location = location or g.user.location
+
+                db.session.commit()
+
+                return redirect(f'/users/{g.user.id}')
 
     return render_template('/users/edit.html',
-                           form=form, user=g.user)
+                           form=form,
+                           user=g.user)
 
     # IMPLEMENT THIS
 
@@ -361,16 +351,13 @@ def add_message():
 def show_message(message_id):
     """Show a message."""
 
-    form = g.csrf_form
-
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
     msg = Message.query.get_or_404(message_id)
     return render_template('messages/show.html',
-                           message=msg,
-                           form=form)
+                           message=msg)
 
 
 @app.post('/messages/<int:message_id>/delete')
@@ -404,21 +391,20 @@ def homepage():
     - anon users: no messages
     - logged in: 100 most recent messages of self & followed_users
     """
-    form = g.csrf_form
 
     if g.user:
         following = [following.id for following in g.user.following]
 
         messages = (Message
                     .query
+                    # can concat lists
                     .filter((Message.user_id == g.user.id) | (Message.user_id.in_(following)))
                     .order_by(Message.timestamp.desc())
                     .limit(100)
                     .all())
 
         return render_template('home.html',
-                               messages=messages,
-                               form=form)
+                               messages=messages)
 
     else:
         return render_template('home-anon.html')
