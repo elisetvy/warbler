@@ -215,10 +215,13 @@ def show_likes(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
+    # don't really need to pass in liked_messages explicitly
     user = User.query.get_or_404(user_id)
     return render_template('/likes/show.html',
                            user=user,
                            liked_messages=user.liked_messages)
+
+# TODO: add heart when clicking on message
 
 
 @app.post('/users/likes/<int:message_id>')
@@ -236,6 +239,13 @@ def like_message(message_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}/likes")
+
+# imperative approach => toggle; we took declarative approach
+
+# should happen on message resource not users
+# /messages/<int:message_id>/action
+
+# TODO: redirect to last page user was on when we like a msg
 
 
 @app.post('/users/unlikes/<int:message_id>')
