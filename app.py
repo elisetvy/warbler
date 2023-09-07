@@ -9,7 +9,7 @@ from werkzeug.exceptions import Unauthorized
 from flask_bcrypt import Bcrypt
 
 from forms import UserAddForm, LoginForm, MessageForm, CSRFProtectForm, EditProfileForm
-from models import db, connect_db, User, Message
+from models import db, connect_db, User, Message, Like
 
 load_dotenv()
 bcrypt = Bcrypt()
@@ -84,6 +84,7 @@ def signup():
                 password=form.password.data,
                 email=form.email.data,
                 image_url=form.image_url.data or User.image_url.default.arg,
+                location=form.location.data
             )
             db.session.commit()
 
@@ -204,6 +205,53 @@ def show_followers(user_id):
     user = User.query.get_or_404(user_id)
     return render_template('users/followers.html',
                            user=user)
+
+
+@app.get('/users/<int:user_id>/likes')
+def show_likes(user_id):
+    """Show list of liked messages from this user"""
+
+    if not g.user:
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    user = User.query.get_or_404(user_id)
+    return render_template('users/likes.html',
+                           user=user)
+
+
+@app.post('/users/likes/<int:message_id>')
+def like_message(message_id):
+    """Like a message from another user"""
+
+    form = g.csrf_form
+
+    if not g.user or not form.validate_on_submit():
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    liked_message = Like.query.get_or_404(message_id)
+    g.user.likes.append(liked_message)
+    db.session.commit()
+
+    return redirect(f"/users/{g.user.id}/likes")
+
+
+@app.post('/users/likes/<int:message_id>')
+def unlike_message(message_id):
+    """Unlike a message"""
+
+    form = g.csrf_form
+
+    if not g.user or not form.validate_on_submit():
+        flash("Access unauthorized.", "danger")
+        return redirect("/")
+
+    liked_message = User.query.get_or_404(message_id)
+    g.user.likes.remove(liked_message)
+    db.session.commit()
+
+    return redirect(f"/users/{g.user.id}/likes")
 
 
 @app.post('/users/follow/<int:follow_id>')
