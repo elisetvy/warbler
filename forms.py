@@ -33,7 +33,7 @@ class UserAddForm(FlaskForm):
     )
 
     location = StringField(
-        '(Optional) Image URL',
+        'Location',
         validators=[Optional(), Length(max=50)]
     )
 
