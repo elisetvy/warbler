@@ -47,15 +47,24 @@
     <ul class="list-group" id="messages">
       {% for msg in messages %}
       <li class="list-group-item">
-        <a href="/messages/{{ msg.id }}" class="message-link" />
-        <a href="/users/{{ msg.user.id }}">
-          <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
+        <a href="/messages/{{ msg.id }}" class="message-link">
+          <a href="/users/{{ msg.user.id }}">
+            <img src="{{ msg.user.image_url }}" alt="" class="timeline-image">
+          </a>
+          <div class="message-area">
+            <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
+            <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
+            <p>{{ msg.text }}</p>
+            {% if msg.user.username != g.user.username %}
+            <form action="/users/{{ g.user.id }}" method="POST">
+              {{ g.csrf_form.hidden_tag() }}
+              <button style="background:none; border:none; position: relative; z-index: 2;">
+                <i class="bi bi-heart"></i>
+              </button>
+            </form>
+            {% endif %}
+          </div>
         </a>
-        <div class="message-area">
-          <a href="/users/{{ msg.user.id }}">@{{ msg.user.username }}</a>
-          <span class="text-muted">{{ msg.timestamp.strftime('%d %B %Y') }}</span>
-          <p>{{ msg.text }}</p>
-        </div>
       </li>
       {% endfor %}
     </ul>
