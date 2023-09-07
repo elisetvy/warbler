@@ -17,6 +17,13 @@
           {{ like.timestamp.strftime('%d %B %Y') }}
         </span>
         <p>{{ like.text }}</p>
+
+        <form action="/users/likes/{{ like.id }}" method="POST">
+          {{ g.csrf_form.hidden_tag() }}
+          <button style="background:none; border:none; position: relative; z-index: 2;">
+            <i class="bi bi-heart-fill" style="color: #e68fac"></i>
+          </button>
+        </form>
       </div>
     </li>
 
