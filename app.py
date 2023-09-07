@@ -247,7 +247,7 @@ def unlike_message(message_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    liked_message = User.query.get_or_404(message_id)
+    liked_message = Message.query.get_or_404(message_id)
     g.user.liked_messages.remove(liked_message)
     db.session.commit()
 
