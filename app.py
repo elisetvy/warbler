@@ -240,7 +240,7 @@ def like_message(message_id):
 
 # imperative approach => toggle; we took declarative approach
 
-# TODO: redirect to last page user was on when we like a msg
+# TODO: futher study: redirect to last page user was on when we like a msg
 
 
 @app.post('/messages/<int:message_id>/unlike')
