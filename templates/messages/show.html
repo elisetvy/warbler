@@ -17,21 +17,7 @@
             <a href="/users/{{ message.user.id }}">
               @{{ message.user.username }}
             </a>
-            {% if message in g.user.liked_messages %}
-            <form method="POST" action="/messages/{{ message.id}}/unlike">
-              {{ g.csrf_form.hidden_tag() }}
-              <button style="background:none; border:none; position: relative; z-index: 2;">
-                <i class="bi bi-heart-fill" style="color: #e68fac"></i>
-              </button>
-            </form>
-            {% elif message not in g.user.messages%}
-            <form method="POST" action="/messages/{{ message.id}}/like">
-              {{ g.csrf_form.hidden_tag() }}
-              <button style="background:none; border:none; position: relative; z-index: 2;">
-                <i class="bi bi-heart" style="color: #e68fac"></i>
-              </button>
-            </form>
-            {% endif %}
+
 
             {% if g.user %}
             {% if g.user.id == message.user.id %}
@@ -58,6 +44,21 @@
           <span class="text-muted">
             {{ message.timestamp.strftime('%d %B %Y') }}
           </span>
+          {% if message in g.user.liked_messages %}
+          <form method="POST" action="/messages/{{ message.id}}/unlike">
+            {{ g.csrf_form.hidden_tag() }}
+            <button style="background:none; border:none; position: relative; z-index: 2;">
+              <i class="bi bi-heart-fill" style="color: #e68fac"></i>
+            </button>
+          </form>
+          {% elif message not in g.user.messages%}
+          <form method="POST" action="/messages/{{ message.id}}/like">
+            {{ g.csrf_form.hidden_tag() }}
+            <button style="background:none; border:none; position: relative; z-index: 2;">
+              <i class="bi bi-heart" style="color: #e68fac"></i>
+            </button>
+          </form>
+          {% endif %}
         </div>
       </li>
     </ul>
