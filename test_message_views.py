@@ -5,6 +5,7 @@
 #    FLASK_DEBUG=False python -m unittest test_message_views.py
 
 
+from app import app, CURR_USER_KEY
 import os
 from unittest import TestCase
 
@@ -19,7 +20,6 @@ os.environ['DATABASE_URL'] = "postgresql:///warbler_test"
 
 # Now we can import app
 
-from app import app, CURR_USER_KEY
 
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
 
@@ -44,20 +44,25 @@ class MessageBaseViewTestCase(TestCase):
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
+        u2 = User.signup("u2", "u2@email.com", "password", None)
         db.session.flush()
 
         m1 = Message(text="m1-text", user_id=u1.id)
-        db.session.add_all([m1])
+        m2 = Message(text="m2-text", user_id=u2.id)
+        db.session.add_all([m1, m2])
         db.session.commit()
 
         self.u1_id = u1.id
+        self.u2_id = u2.id
         self.m1_id = m1.id
+        self.m2_id = m2.id
 
         self.client = app.test_client()
 
 
 class MessageAddViewTestCase(MessageBaseViewTestCase):
     def test_add_message(self):
+        """Tests if we are able to add a message when logged in"""
         # Since we need to change the session to mimic logging in,
         # we need to use the changing-session trick:
         with self.client as c:
@@ -71,3 +76,86 @@ class MessageAddViewTestCase(MessageBaseViewTestCase):
             self.assertEqual(resp.status_code, 302)
 
             Message.query.filter_by(text="Hello").one()
+
+    def test_add_message_fail(self):
+        """Tests if we are able to add a message when logged out. Should return authorization error."""
+        with self.client as c:
+            resp = c.post('/messages/new',
+                          data={"text": "Hello"},
+                          follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('Access unauthorized', html)
+
+    def test_delete_message_success(self):
+        """Tests if we are able to delete a message when logged in."""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(f'/messages/{self.m1_id}/delete',
+                          follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('<!-- tests for user profile', html)
+
+            messages = [message.id for message in Message.query.all()]
+            self.assertNotIn(self.m1_id, messages)
+
+    def test_delete_message_fail(self):
+        """Tests if we are able to delete a message when logged out. Returns authorization error."""
+        with self.client as c:
+            resp = c.post(f'/messages/{self.m1_id}/delete',
+                          follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('Access unauthorized', html)
+
+    def test_show_message(self):
+        """Tests if message details are shown when clicking on the message."""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.get(f'/messages/{self.m1_id}')
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('<!-- test for message details', html)
+
+    def test_like_message(self):
+        """Tests if we can like a message from another user."""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp = c.post(f'/messages/{self.u2_id}/like',
+                          follow_redirects=True)
+
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('<!-- test for showing likes', html)
+
+    def test_unlike_message(self):
+        """Tests if we can unlike a liked message"""
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess[CURR_USER_KEY] = self.u1_id
+
+            resp_like = c.post(f'/messages/{self.u2_id}/like')
+
+            resp_unlike = c.post(f'/messages/{self.u2_id}/unlike',
+                                 follow_redirects=True)
+
+            html = resp_unlike.get_data(as_text=True)
+
+            self.assertEqual(resp_unlike.status_code, 200)
+            self.assertIn('<!-- test for showing likes', html)
