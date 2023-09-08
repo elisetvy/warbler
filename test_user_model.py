@@ -7,6 +7,7 @@
 
 import os
 from unittest import TestCase
+from sqlalchemy.exc import IntegrityError
 
 from models import db, User, Message, Follow
 
@@ -51,3 +52,49 @@ class UserModelTestCase(TestCase):
         # User should have no messages & no followers
         self.assertEqual(len(u1.messages), 0)
         self.assertEqual(len(u1.followers), 0)
+
+    def test_is_following(self):
+        """Tests is_following method."""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        u1.following.append(u2)
+
+        self.assertTrue(u1.is_following(u2))
+        self.assertFalse(u2.is_following(u1))
+
+    def test_is_followed_by(self):
+        """Tests is_followed_by method."""
+
+        u1 = User.query.get(self.u1_id)
+        u2 = User.query.get(self.u2_id)
+
+        u1.following.append(u2)
+
+        self.assertFalse(u1.is_followed_by(u2))
+        self.assertTrue(u2.is_followed_by(u1))
+
+    def test_user_signup_success(self):
+        """Tests User.signup success."""
+
+        u3 = User.signup("u3", "u3@email.com", "password", None)
+
+        self.assertIsInstance(u3, User)
+
+    def test_user_signup_fail(self):
+        """Tests User.signup fail."""
+
+        u4 = User.signup("u1", "u1@email.com", "password", None)
+
+        # non-unique username/email raises IntegrityError upon trying to commit
+        self.assertRaises(IntegrityError, db.session.commit)
+        # missing password raises TypeError when trying to call User.signup
+        self.assertRaises(TypeError, User.signup, "u666", "u666@email.com")
+
+    def test_user_authenticate(self):
+        """Tests User.authenticate."""
+
+        self.assertIsInstance(User.authenticate("u1", "password"), User)
+        self.assertFalse(User.authenticate("u1", "123456"))
+        self.assertFalse(User.authenticate("u3", "password"))
