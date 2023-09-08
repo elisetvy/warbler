@@ -36,9 +36,11 @@ class UserViewTestCase(TestCase):
         User.query.delete()
 
         u1 = User.signup("u1", "u1@email.com", "password", None)
+        u2 = User.signup("u2", "u2@email.com", "password", None)
 
         db.session.commit()
         self.u1_id = u1.id
+        self.u2_id = u2.id
 
         self.client = app.test_client()
 
@@ -231,3 +233,105 @@ class UserViewTestCase(TestCase):
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn('Access unauthorized', html)
+
+    def test_start_following_success(self):
+        """Tests to start following another user if user is logged in."""
+        with self.client as client:
+            resp_login = client.post('/login',
+                                     data={'username': 'u1',
+                                           'password': 'password'})
+
+            resp = client.post(f'/users/follow/{self.u2_id}', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('<!-- test for following', html)
+
+    def test_start_following_fail(self):
+        """Tests to start following another user if no user is logged in."""
+        with self.client as client:
+            resp = client.post(f'/users/follow/{self.u2_id}', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('Access unauthorized', html)
+
+    def test_stop_following_success(self):
+        """Tests to stop following another user if user is logged in."""
+        with self.client as client:
+            resp_login = client.post('/login',
+                                     data={'username': 'u1',
+                                           'password': 'password'})
+
+            resp_start_following = client.post(f'/users/follow/{self.u2_id}', follow_redirects=True)
+
+            resp = client.post(f'/users/stop-following/{self.u2_id}', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('<!-- test for following', html)
+
+    def test_edit_profile_form(self):
+        """Tests to update profile form displays."""
+        with self.client as client:
+            resp_login = client.post('/login',
+                                     data={'username': 'u1',
+                                           'password': 'password'})
+
+            resp = client.get('/users/profile')
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('Edit Your Profile', html)
+
+    def test_edit_profile_success(self):
+        """Tests to update profile."""
+        with self.client as client:
+            resp_login = client.post('/login',
+                                     data={'username': 'u1',
+                                           'password': 'password'})
+
+            resp = client.post('/users/profile',
+                               data={
+                                   'username': 'u12',
+                                   'email': 'u12@email.com',
+                                   'password': 'password'
+                               }, follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('<!-- tests for user profile', html)
+
+    def test_edit_profile_fail(self):
+        """Tests to update profile with existing username."""
+        with self.client as client:
+            resp_login = client.post('/login',
+                                     data={'username': 'u1',
+                                           'password': 'password'})
+
+            resp = client.post('/users/profile',
+                               data={
+                                   'username': 'u2',
+                                   'email': 'u@email.com',
+                                   'password': 'password'
+                               })
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('Username already exists!', html)
+
+    def test_delete_user(self):
+        """Tests to delete user."""
+        with self.client as client:
+            resp_login = client.post('/login',
+                                     data={'username': 'u1',
+                                           'password': 'password'})
+
+            resp = client.post('/users/delete', follow_redirects=True)
+            html = resp.get_data(as_text=True)
+
+            self.assertEqual(resp.status_code, 200)
+            self.assertIn('Join Warbler today', html)
+
+            users = [ user.username for user in User.query.all() ]
+            self.assertNotIn("u1", users)
