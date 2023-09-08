@@ -241,7 +241,8 @@ class UserViewTestCase(TestCase):
                                      data={'username': 'u1',
                                            'password': 'password'})
 
-            resp = client.post(f'/users/follow/{self.u2_id}', follow_redirects=True)
+            resp = client.post(f'/users/follow/{self.u2_id}',
+                               follow_redirects=True)
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
@@ -250,7 +251,8 @@ class UserViewTestCase(TestCase):
     def test_start_following_fail(self):
         """Tests to start following another user if no user is logged in."""
         with self.client as client:
-            resp = client.post(f'/users/follow/{self.u2_id}', follow_redirects=True)
+            resp = client.post(f'/users/follow/{self.u2_id}',
+                               follow_redirects=True)
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
@@ -263,9 +265,11 @@ class UserViewTestCase(TestCase):
                                      data={'username': 'u1',
                                            'password': 'password'})
 
-            resp_start_following = client.post(f'/users/follow/{self.u2_id}', follow_redirects=True)
+            resp_start_following = client.post(f'/users/follow/{self.u2_id}',
+                                               follow_redirects=True)
 
-            resp = client.post(f'/users/stop-following/{self.u2_id}', follow_redirects=True)
+            resp = client.post(f'/users/stop-following/{self.u2_id}',
+                               follow_redirects=True)
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
@@ -327,11 +331,12 @@ class UserViewTestCase(TestCase):
                                      data={'username': 'u1',
                                            'password': 'password'})
 
-            resp = client.post('/users/delete', follow_redirects=True)
+            resp = client.post('/users/delete',
+                               follow_redirects=True)
             html = resp.get_data(as_text=True)
 
             self.assertEqual(resp.status_code, 200)
             self.assertIn('Join Warbler today', html)
 
-            users = [ user.username for user in User.query.all() ]
+            users = [user.username for user in User.query.all()]
             self.assertNotIn("u1", users)
