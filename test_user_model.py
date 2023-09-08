@@ -71,6 +71,7 @@ class UserModelTestCase(TestCase):
         u2 = User.query.get(self.u2_id)
 
         u1.following.append(u2)
+        #TODO: commit every time append/do changes to db
 
         self.assertFalse(u1.is_followed_by(u2))
         self.assertTrue(u2.is_followed_by(u1))
@@ -81,6 +82,7 @@ class UserModelTestCase(TestCase):
         u3 = User.signup("u3", "u3@email.com", "password", None)
 
         self.assertIsInstance(u3, User)
+        #TODO: u3 has properties we expect
 
     def test_user_signup_fail(self):
         """Tests User.signup fail."""
@@ -89,12 +91,16 @@ class UserModelTestCase(TestCase):
 
         # non-unique username/email raises IntegrityError upon trying to commit
         self.assertRaises(IntegrityError, db.session.commit)
+
+        #TODO: separate test
         # missing password raises TypeError when trying to call User.signup
         self.assertRaises(TypeError, User.signup, "u666", "u666@email.com")
 
     def test_user_authenticate(self):
         """Tests User.authenticate."""
 
-        self.assertIsInstance(User.authenticate("u1", "password"), User)
+        self.assertIsInstance(User.authenticate("u1", "password"), User) #TODO: check correct user not just a user
+
+        #TODO: separate test
         self.assertFalse(User.authenticate("u1", "123456"))
         self.assertFalse(User.authenticate("u3", "password"))

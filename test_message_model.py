@@ -59,7 +59,7 @@ class MessageModelTestCase(TestCase):
         self.assertEqual(m1.user_id, self.u1_id)
 
     def test_message_fail(self):
-        """Tests if message creation if not nullable fields are left empty"""
+        """Tests message creation if not nullable fields are left empty"""
         m2 = Message()
 
         db.session.add(m2)
