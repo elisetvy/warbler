@@ -320,13 +320,11 @@ def profile():
 
             is_valid = True
 
-            # TODO: further study: add additional validation for if username or email is not changing
-
-            if User.query.filter(User.username == username).first():
+            if User.query.filter(User.username == username).first() and username != g.user.username:
                 form.username.errors = ["Username already exists!"]
                 is_valid = False
 
-            if User.query.filter(User.email == email).first():
+            if User.query.filter(User.email == email).first() and email != g.user.email:
                 form.email.errors = [
                     "Email is already associated with a user!"]
                 is_valid = False
