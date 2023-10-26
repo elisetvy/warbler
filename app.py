@@ -33,7 +33,7 @@ connect_db(app)
 
 @app.before_request
 def add_user_to_g():
-    """If we're logged in, add curr user to Flask global."""
+    """If logged in, add curr user to Flask global."""
 
     if CURR_USER_KEY in session:
         g.user = User.query.get(session[CURR_USER_KEY])
@@ -70,8 +70,7 @@ def signup():
     If form not valid, present form.
 
     If the there already is a user with that username: flash message
-    and re-present form.
-    """
+    and represent form."""
 
     do_logout()
 
@@ -132,15 +131,13 @@ def logout():
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    # guarding
+    # Guarding
     #
     # if form.validate_on_submit():
     do_logout()
     flash("Logged out.")
     return redirect("/login")
-
-    # IMPLEMENT THIS AND FIX BUG
-    # DO NOT CHANGE METHOD ON ROUTE
+    #TODO: what going on here
 
 
 ##############################################################################
@@ -150,8 +147,7 @@ def logout():
 def list_users():
     """Page with listing of users.
 
-    Can take a 'q' param in querystring to search by that username.
-    """
+    Can take a 'q' param in querystring to search by that username."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -185,6 +181,7 @@ def show_user(user_id):
 @app.get('/users/<int:user_id>/following')
 def show_following(user_id):
     """Show list of people this user is following."""
+
     if not g.user:
         flash("Access unauthorized.", "danger")
         return redirect("/")
@@ -196,7 +193,7 @@ def show_following(user_id):
 
 @app.get('/users/<int:user_id>/followers')
 def show_followers(user_id):
-    """Show list of followers of this user."""
+    """Show list of user's followers."""
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -215,7 +212,7 @@ def show_likes(user_id):
         flash("Access unauthorized.", "danger")
         return redirect("/")
 
-    # don't really need to pass in liked_messages explicitly
+    # TODO: don't really need to pass in liked_messages explicitly?
     user = User.query.get_or_404(user_id)
     return render_template('/likes/show.html',
                            user=user,
@@ -224,7 +221,7 @@ def show_likes(user_id):
 
 @app.post('/messages/<int:message_id>/like')
 def like_message(message_id):
-    """Like a message from another user"""
+    """Like a message from another user."""
 
     form = g.csrf_form
 
@@ -237,10 +234,6 @@ def like_message(message_id):
     db.session.commit()
 
     return redirect(f"/users/{g.user.id}/likes")
-
-# imperative approach => toggle; we took declarative approach
-
-# TODO: futher study: redirect to last page user was on when we like a msg
 
 
 @app.post('/messages/<int:message_id>/unlike')
@@ -264,8 +257,7 @@ def unlike_message(message_id):
 def start_following(follow_id):
     """Add a follow for the currently-logged-in user.
 
-    Redirect to following page for the current user.
-    """
+    Redirect to following page for the current user."""
 
     form = g.csrf_form
 
@@ -282,10 +274,9 @@ def start_following(follow_id):
 
 @app.post('/users/stop-following/<int:follow_id>')
 def stop_following(follow_id):
-    """Have currently-logged-in-user stop following this user.
+    """Have current user stop following this user.
 
-    Redirect to following page for the current for the current user.
-    """
+    Redirect to current user's following page."""
 
     form = g.csrf_form
 
@@ -302,7 +293,7 @@ def stop_following(follow_id):
 
 @app.route('/users/profile', methods=["GET", "POST"])
 def profile():
-    """Update profile for current user."""
+    """Update current user's profile."""
 
     if not g.user:
         raise Unauthorized()
@@ -345,15 +336,13 @@ def profile():
                            form=form,
                            user=g.user)
 
-    # IMPLEMENT THIS
 
 
 @app.post('/users/delete')
 def delete_user():
     """Delete user.
 
-    Redirect to signup page.
-    """
+    Redirect to signup page."""
     form = g.csrf_form
 
     if not g.user or not form.validate_on_submit():
@@ -379,8 +368,7 @@ def delete_user():
 def add_message():
     """Add a message:
 
-    Show form if GET. If valid, update message and redirect to user page.
-    """
+    Show form if GET. If valid, update message and redirect to user page.""" #TODO: wth am I saying here
 
     if not g.user:
         flash("Access unauthorized.", "danger")
@@ -417,8 +405,8 @@ def delete_message(message_id):
     """Delete a message.
 
     Check that this message was written by the current user.
-    Redirect to user page on success.
-    """
+
+    Redirect to user page on success."""
     form = g.csrf_form
 
     if not g.user or not form.validate_on_submit():
@@ -440,9 +428,8 @@ def delete_message(message_id):
 def homepage():
     """Show homepage:
 
-    - anon users: no messages
-    - logged in: 100 most recent messages of self & followed_users
-    """
+    - Anon users: no messages
+    - Logged in: 100 most recent messages of self & followed_users."""
 
     if g.user:
         following = [following.id for following in g.user.following]
