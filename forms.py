@@ -3,6 +3,10 @@ from wtforms import StringField, PasswordField, TextAreaField
 from wtforms.validators import InputRequired, Email, Length, URL, Optional
 
 
+class CSRFProtectForm(FlaskForm):
+    """Form for CSRF protection."""
+
+
 class MessageForm(FlaskForm):
     """Form for adding/editing messages."""
 
@@ -50,10 +54,6 @@ class LoginForm(FlaskForm):
         'Password',
         validators=[InputRequired(), Length(min=6, max=50)],
     )
-
-
-class CSRFProtectForm(FlaskForm):
-    """Form for CSRF protection."""
 
 
 class EditProfileForm(FlaskForm):

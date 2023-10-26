@@ -107,8 +107,7 @@ class User(db.Model):
     def signup(cls, username, email, password, image_url=DEFAULT_IMAGE_URL, location=""):
         """Sign up user.
 
-        Hashes password and adds user to session.
-        """
+        Hash password and add user to session."""
 
         hashed_pwd = bcrypt.generate_password_hash(password).decode('UTF-8')
 
@@ -127,13 +126,10 @@ class User(db.Model):
     def authenticate(cls, username, password):
         """Find user with `username` and `password`.
 
-        This is a class method (call it on the class, not an individual user.)
-        It searches for a user whose password hash matches this password
-        and, if it finds such a user, returns that user object.
+        Search for a user whose password hash matches this password
+        and, if found, returns that user object.
 
-        If this can't find matching user (or if password is wrong), returns
-        False.
-        """
+        If matching user not found (or if password is wrong), return False."""
 
         user = cls.query.filter_by(username=username).one_or_none()
 
@@ -152,7 +148,7 @@ class User(db.Model):
         return len(found_user_list) == 1
 
     def is_following(self, other_user):
-        """Is this user following `other_use`?"""
+        """Is this user following `other_user`?"""
 
         found_user_list = [
             user for user in self.following if user == other_user]
@@ -208,8 +204,7 @@ class Like(db.Model):
 def connect_db(app):
     """Connect this database to provided Flask app.
 
-    You should call this in your Flask app.
-    """
+    Call this in your Flask app."""
 
     app.app_context().push()
     db.app = app
