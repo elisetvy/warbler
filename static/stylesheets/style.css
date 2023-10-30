@@ -43,7 +43,7 @@ body.error-404 {
   text-decoration: underline;
 }
 
-.navbar a:hover {
+.navbar a:hover, .logout:hover {
   color: #1c94e0;
 }
 
